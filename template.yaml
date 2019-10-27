@@ -62,57 +62,57 @@ Resources:
       DefinitionString:
         !Sub
           - |-
-        {
-            "Comment": "Iterator State Machine Example",
-            "StartAt": "ConfigureCount",
-            "States": {
-                
-                "ConfigureCount": {
-                    "Type": "Pass",
-                    "Result": {
-                        "count": 10,
-                        "index": 0,
-                        "step": 1
+            {  
+                "Comment": "Iterator State Machine Example",
+                "StartAt": "ConfigureCount",
+                "States": {
+                    
+                    "ConfigureCount": {
+                        "Type": "Pass",
+                        "Result": {
+                            "count": 10,
+                            "index": 0,
+                            "step": 1
+                        },
+                        "ResultPath": "$.iterator",
+                        "Next": "Iterator"
                     },
-                    "ResultPath": "$.iterator",
-                    "Next": "Iterator"
-                },
-                "Iterator": {
-                    "Type": "Task",
-                    "Resource": "${lambdaArn}",
-                    "ResultPath": "$.iterator",
-                    "Next": "IsCountReached"
-                },
-                "IsCountReached": {
-                    "Type": "Choice",
-                    "Choices": [
-                        {
-                            "Variable": "$.iterator.continuance",
-                            "BooleanEquals": true,
-                            "Next": "ExampleWork"
-                        }
-                    ],
-                    "Default": "Done"
-                },
-                "ExampleWork": {
-                    "Comment": "Your application logic, to run a specific number of times",
-                    "Type": "Pass",
-                    "Result": {
-                      "success": true
+                    "Iterator": {
+                        "Type": "Task",
+                        "Resource": "${lambdaArn}",
+                        "ResultPath": "$.iterator",
+                        "Next": "IsCountReached"
                     },
-                    "ResultPath": "$.result",
-                    "Next": "Iterator"
-                },
-                "Done": {
-                    "Type": "Pass",
-                    "End": true
-                  
+                    "IsCountReached": {
+                        "Type": "Choice",
+                        "Choices": [
+                            {
+                                "Variable": "$.iterator.continuance",
+                                "BooleanEquals": true,
+                                "Next": "ExampleWork"
+                            }
+                        ],
+                        "Default": "Done"
+                    },
+                    "ExampleWork": {
+                        "Comment": "Your application logic, to run a specific number of times",
+                        "Type": "Pass",
+                        "Result": {
+                          "success": true
+                        },
+                        "ResultPath": "$.result",
+                        "Next": "Iterator"
+                    },
+                    "Done": {
+                        "Type": "Pass",
+                        "End": true
+                      
+                    }
                 }
             }
-        }
-        - {lambdaArn: !GetAtt [ MyLambdaFunction, Arn ]}
-    RoleArn: !GetAtt [ StatesExecutionRole, Arn ]
-
+          - {lambdaArn: !GetAtt [ MyLambdaFunction, Arn ]}
+      RoleArn: !GetAtt [ StatesExecutionRole, Arn ]
+    
 
 Outputs:
   IterateFunction:
