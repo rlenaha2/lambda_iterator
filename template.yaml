@@ -1,0 +1,125 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  sam-app
+
+  SAM Template for iterating a lambda multiple times
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Globals:
+  Function:
+    Timeout: 60
+    Environment:
+      Variables:
+        REGION_NAME: us-west-2
+        TEST_MODE: True
+
+
+Parameters:
+  Stage:
+    Description: Stage of deployment
+    Type: String
+    Default: dev
+
+
+Resources:
+  IterateFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: /
+      Handler: pythonIterator.lambda_handler
+      Runtime: python3.6
+
+
+  StatesExecutionRole:
+    Type: "AWS::IAM::Role"
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: "Allow"
+            Principal:
+              Service:
+                - !Sub states.${AWS::Region}.amazonaws.com
+            Action: "sts:AssumeRole"
+      Path: "/"
+      Policies:
+        - PolicyName: StatesExecutionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "lambda:InvokeFunction"
+                Resource: "*"
+
+
+
+  MyStateMachine:
+    Type: "AWS::StepFunctions::StateMachine"
+    Properties:
+      StateMachineName: IterateStateMachine
+      DefinitionString:
+        !Sub
+          - |-
+        {
+            "Comment": "Iterator State Machine Example",
+            "StartAt": "ConfigureCount",
+            "States": {
+                
+                "ConfigureCount": {
+                    "Type": "Pass",
+                    "Result": {
+                        "count": 10,
+                        "index": 0,
+                        "step": 1
+                    },
+                    "ResultPath": "$.iterator",
+                    "Next": "Iterator"
+                },
+                "Iterator": {
+                    "Type": "Task",
+                    "Resource": "${lambdaArn}",
+                    "ResultPath": "$.iterator",
+                    "Next": "IsCountReached"
+                },
+                "IsCountReached": {
+                    "Type": "Choice",
+                    "Choices": [
+                        {
+                            "Variable": "$.iterator.continuance",
+                            "BooleanEquals": true,
+                            "Next": "ExampleWork"
+                        }
+                    ],
+                    "Default": "Done"
+                },
+                "ExampleWork": {
+                    "Comment": "Your application logic, to run a specific number of times",
+                    "Type": "Pass",
+                    "Result": {
+                      "success": true
+                    },
+                    "ResultPath": "$.result",
+                    "Next": "Iterator"
+                },
+                "Done": {
+                    "Type": "Pass",
+                    "End": true
+                  
+                }
+            }
+        }
+        - {lambdaArn: !GetAtt [ MyLambdaFunction, Arn ]}
+    RoleArn: !GetAtt [ StatesExecutionRole, Arn ]
+
+
+Outputs:
+  IterateFunction:
+    Description: "Iterate Lambda Function ARN"
+    Value: !GetAtt IterateFunction.Arn
+  IterateFunctionIamRole:
+    Description: "Implicit IAM Role created for Iterate Function"
+    Value: !GetAtt IterateFunctionRole.Arn
+
+
