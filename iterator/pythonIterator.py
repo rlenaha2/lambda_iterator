@@ -1,11 +1,15 @@
-import json
+import logging
 
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
 
     index=event['iterator']['index']
     step=event['iterator']['step']
     count=event['iterator']['count']
+
+    logger.info(f'Entering step {step}')
 
     index += step
 
