@@ -9,7 +9,7 @@ def lambda_handler(event, context):
     step=event['iterator']['step']
     count=event['iterator']['count']
 
-    logger.info(f'Entering step {step}')
+    logger.info(f'Entering step {index}')
 
     index += step
 
