@@ -5,26 +5,10 @@ Description: >
 
   SAM Template for iterating a lambda multiple times
 
-# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
-Globals:
-  Function:
-    Timeout: 60
-    Environment:
-      Variables:
-        REGION_NAME: us-west-2
-        TEST_MODE: True
-
-
-Parameters:
-  Stage:
-    Description: Stage of deployment
-    Type: String
-    Default: dev
-
 
 Resources:
   IterateFunction:
-    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Type: AWS::Serverless::Function 
     Properties:
       CodeUri: iterator/
       Handler: pythonIterator.lambda_handler
@@ -52,7 +36,6 @@ Resources:
                 Action:
                   - "lambda:InvokeFunction"
                 Resource: "*"
-
 
 
   MyStateMachine:
@@ -121,5 +104,3 @@ Outputs:
   IterateFunctionIamRole:
     Description: "Implicit IAM Role created for Iterate Function"
     Value: !GetAtt IterateFunctionRole.Arn
-
-
